@@ -67,11 +67,12 @@ fun MapScreen() {
         LatLng(-16.399299, -71.536721)
     )
 
-    val polylineCoords = listOf(
-        LatLng(-16.4040102, -71.559611),
+    val xdPolylineCoords = listOf(
         LatLng(-16.433415, -71.5442652),
         LatLng(-16.4205151, -71.4945209),
-        LatLng(-16.3524187, -71.5675994)
+        LatLng(-16.3524187, -71.5675994),
+        LatLng(-16.4205151, -71.4945209),
+        LatLng(-16.433415, -71.5442652)
     )
 
     LaunchedEffect(Unit) {
@@ -120,8 +121,8 @@ fun MapScreen() {
             )
 
             Polyline(
-                points = polylineCoords,
-                color = Color.Green,
+                points = xdPolylineCoords,
+                color = Color.Red,
                 width = 5f
             )
         }
