@@ -17,21 +17,20 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.Marker
 
-// Encargado de la gestión del mapa
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-    val ArequipaLocation = LatLng(-16.4040102, -71.559611) // Arequipa, Perú
+    val ArequipaLocation = LatLng(-16.4040102, -71.559611)
     val cameraPositionState = rememberCameraPositionState {
         position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(ArequipaLocation, 12f)
     }
 
-    // Función para convertir un recurso de imagen en BitmapDescriptor con un tamaño ajustado
     fun bitmapDescriptorFromVector(context: Context, vectorResId: Int, size: Int): BitmapDescriptor {
         val vectorDrawable: Drawable = ContextCompat.getDrawable(context, vectorResId)!!
         vectorDrawable.setBounds(0, 0, size, size)
@@ -41,14 +40,12 @@ fun MapScreen() {
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
-    // Lista de ubicaciones
     val locations = listOf(
-        LatLng(-16.433415, -71.5442652), // JLByR
-        LatLng(-16.4205151, -71.4945209), // Paucarpata
-        LatLng(-16.3524187, -71.5675994) // Zamacola
+        LatLng(-16.433415, -71.5442652),
+        LatLng(-16.4205151, -71.4945209),
+        LatLng(-16.3524187, -71.5675994)
     )
 
-    // Polígonos
     val mallAventuraPolygon = listOf(
         LatLng(-16.432292, -71.509145),
         LatLng(-16.432757, -71.509626),
@@ -70,22 +67,28 @@ fun MapScreen() {
         LatLng(-16.399299, -71.536721)
     )
 
+    val polylineCoords = listOf(
+        LatLng(-16.4040102, -71.559611),
+        LatLng(-16.433415, -71.5442652),
+        LatLng(-16.4205151, -71.4945209),
+        LatLng(-16.3524187, -71.5675994)
+    )
+
     LaunchedEffect(Unit) {
         cameraPositionState.animate(
-            update = CameraUpdateFactory.newLatLngZoom(LatLng(-16.2520984, -71.6836503), 12f), // Mover a Yura
+            update = CameraUpdateFactory.newLatLngZoom(LatLng(-16.2520984, -71.6836503), 12f),
             durationMs = 3000
         )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Añadir GoogleMap al layout
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState
         ) {
             Marker(
                 state = rememberMarkerState(position = ArequipaLocation),
-                icon = bitmapDescriptorFromVector(context, R.drawable.pokeparada, 100), // Icono personalizado con tamaño ajustado
+                icon = bitmapDescriptorFromVector(context, R.drawable.pokeparada, 100),
                 title = "Arequipa, Perú"
             )
 
@@ -97,7 +100,6 @@ fun MapScreen() {
                 )
             }
 
-            // Añadir polígonos
             Polygon(
                 points = plazaDeArmasPolygon,
                 strokeColor = Color.Red,
@@ -115,6 +117,12 @@ fun MapScreen() {
                 strokeColor = Color.Red,
                 fillColor = Color.Blue,
                 strokeWidth = 5f
+            )
+
+            Polyline(
+                points = polylineCoords,
+                color = Color.Green,
+                width = 5f
             )
         }
     }
