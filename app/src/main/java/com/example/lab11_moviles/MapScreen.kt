@@ -1,6 +1,9 @@
 package com.example.lab11_moviles
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
@@ -15,7 +18,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -32,8 +38,10 @@ import com.google.maps.android.compose.rememberMarkerState
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     val ArequipaLocation = LatLng(-16.4040102, -71.559611)
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     val cameraPositionState = rememberCameraPositionState {
         position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(ArequipaLocation, 12f)
     }
@@ -47,51 +55,32 @@ fun MapScreen() {
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
-    val locations = listOf(
-        LatLng(-16.433415, -71.5442652),
-        LatLng(-16.4205151, -71.4945209),
-        LatLng(-16.3524187, -71.5675994)
-    )
+    LaunchedEffect(currentLocation) {
+        currentLocation?.let {
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(it, 12f))
+        }
+    }
 
-    val mallAventuraPolygon = listOf(
-        LatLng(-16.432292, -71.509145),
-        LatLng(-16.432757, -71.509626),
-        LatLng(-16.433013, -71.509310),
-        LatLng(-16.432566, -71.508853)
-    )
+    fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(context as Activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            return
+        }
 
-    val parqueLambramaniPolygon = listOf(
-        LatLng(-16.422704, -71.530830),
-        LatLng(-16.422920, -71.531340),
-        LatLng(-16.423264, -71.531110),
-        LatLng(-16.423050, -71.530600)
-    )
-
-    val plazaDeArmasPolygon = listOf(
-        LatLng(-16.398866, -71.536961),
-        LatLng(-16.398744, -71.536529),
-        LatLng(-16.399178, -71.536289),
-        LatLng(-16.399299, -71.536721)
-    )
-
-    val xdPolylineCoords = listOf(
-        LatLng(-16.433415, -71.5442652),
-        LatLng(-16.4205151, -71.4945209),
-        LatLng(-16.3524187, -71.5675994),
-        LatLng(-16.4205151, -71.4945209),
-        LatLng(-16.433415, -71.5442652)
-    )
-
-    LaunchedEffect(Unit) {
-        cameraPositionState.animate(
-            update = CameraUpdateFactory.newLatLngZoom(LatLng(-16.2520984, -71.6836503), 12f),
-            durationMs = 3000
-        )
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            location?.let {
+                currentLocation = LatLng(it.latitude, it.longitude)
+            }
+        }
     }
 
     Column {
         MapTypeSelection(mapType = mapType) { selectedMapType ->
             mapType = selectedMapType
+        }
+
+        Button(onClick = { getCurrentLocation() }) {
+            Text("Obtener ubicación actual")
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -106,73 +95,13 @@ fun MapScreen() {
                     title = "Arequipa, Perú"
                 )
 
-                val locations = listOf(
-                    LatLng(-16.433415, -71.5442652),
-                    LatLng(-16.4205151, -71.4945209),
-                    LatLng(-16.3524187, -71.5675994)
-                )
-
-                locations.forEach { location ->
+                currentLocation?.let { loc ->
                     Marker(
-                        state = rememberMarkerState(position = location),
-                        title = "Ubicación",
-                        snippet = "Punto de interés"
+                        state = rememberMarkerState(position = loc),
+                        title = "Ubicación Actual"
                     )
                 }
 
-                val plazaDeArmasPolygon = listOf(
-                    LatLng(-16.398866, -71.536961),
-                    LatLng(-16.398744, -71.536529),
-                    LatLng(-16.399178, -71.536289),
-                    LatLng(-16.399299, -71.536721)
-                )
-
-                val parqueLambramaniPolygon = listOf(
-                    LatLng(-16.422704, -71.530830),
-                    LatLng(-16.422920, -71.531340),
-                    LatLng(-16.423264, -71.531110),
-                    LatLng(-16.423050, -71.530600)
-                )
-
-                val mallAventuraPolygon = listOf(
-                    LatLng(-16.432292, -71.509145),
-                    LatLng(-16.432757, -71.509626),
-                    LatLng(-16.433013, -71.509310),
-                    LatLng(-16.432566, -71.508853)
-                )
-
-                val xdPolylineCoords = listOf(
-                    LatLng(-16.433415, -71.5442652),
-                    LatLng(-16.4205151, -71.4945209),
-                    LatLng(-16.3524187, -71.5675994),
-                    LatLng(-16.4205151, -71.4945209),
-                    LatLng(-16.433415, -71.5442652)
-                )
-
-                Polygon(
-                    points = plazaDeArmasPolygon,
-                    strokeColor = Color.Red,
-                    fillColor = Color.Blue,
-                    strokeWidth = 5f
-                )
-                Polygon(
-                    points = parqueLambramaniPolygon,
-                    strokeColor = Color.Red,
-                    fillColor = Color.Blue,
-                    strokeWidth = 5f
-                )
-                Polygon(
-                    points = mallAventuraPolygon,
-                    strokeColor = Color.Red,
-                    fillColor = Color.Blue,
-                    strokeWidth = 5f
-                )
-
-                Polyline(
-                    points = xdPolylineCoords,
-                    color = Color.Red,
-                    width = 5f
-                )
             }
         }
     }
